@@ -1,17 +1,17 @@
 import type { NextPage } from 'next';
 import { Fragment, useState } from 'react';
 import { getDomain } from '../helper';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import Head from 'next/head';
 
 const Home: NextPage = () => {
 	const [value, setValue] = useState<any>(process.env.NEXT_PUBLIC_DEFAULT_URL === undefined ? '' : process.env.NEXT_PUBLIC_DEFAULT_URL);
 	const [isLoading, setLoading] = useState(false);
 	const [response, setResponse] = useState<any>(null);
+	const [isInvalidUrl, setInvalidUrl] = useState(false);
 
 	async function handleAnalyze(url: string) {
 		setLoading(true);
+		setInvalidUrl(false);
 
 		const domain = getDomain();
 		const encode = encodeURIComponent(url);
@@ -19,9 +19,23 @@ const Home: NextPage = () => {
 		await fetch(`${domain}/api/meta?url=${encode}`)
 			.then((response) => response.json())
 			.then((res) => {
-				const obj = res.result as object;
-				setResponse(JSON.stringify(obj));
-				setLoading(false);
+				if (res.code === 200) {
+					const obj = res.result as any;
+					const convert = Object.keys(obj).map((key: any) => [key, obj[key]]);
+
+					setResponse(convert);
+					setLoading(false);
+				} else {
+					if (res.code === 500) {
+						if (res.message.code === 'ERR_INVALID_URL') {
+							setInvalidUrl(true);
+						}
+
+						setLoading(false);
+					} else {
+						setLoading(false);
+					}
+				}
 			})
 			.catch((err) => {
 				if (err) {
@@ -56,6 +70,12 @@ const Home: NextPage = () => {
 							placeholder={process.env.NEXT_PUBLIC_DEFAULT_URL}
 						/>
 					</label>
+
+					{isInvalidUrl && (
+						<div className='pt-2'>
+							<p className='text-red-700'>Uppsss... Invalid URL</p>
+						</div>
+					)}
 
 					<div className='mt-2'>
 						<button
@@ -92,13 +112,24 @@ const Home: NextPage = () => {
 						<div
 							onClick={() => setResponse(null)}
 							style={{ backgroundColor: '#00000073' }}
-							className='cursor-pointer absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center'
+							className='cursor-pointer fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center'
 						/>
 
-						<div className='z-10 absolute w-full md:w-8/12 rounded h-4/6 overflow-scroll'>
-							<SyntaxHighlighter customStyle={{ borderRadius: '12px', padding: '20px' }} style={docco} language='json'>
-								{codeString}
-							</SyntaxHighlighter>
+						<div className='z-10 fixed w-full md:w-8/12 rounded h-4/6 overflow-scroll bg-white p-4'>
+							<span className='text-slate-600 font-semibold'>&#123;</span>
+							<div className='pl-10'>
+								{response.map((item: any, index: number) => {
+									return (
+										<div className='flex mb-2' key={index}>
+											<p className='text-teal-600 font-semibold pr-2'>&quot;{item[0]}&quot;:</p>
+											<p className='text-amber-600 font-semibold'>
+												&quot;{item[1]}&quot;{index !== response.length - 1 && <span className='text-slate-700'>,</span>}
+											</p>
+										</div>
+									);
+								})}
+							</div>
+							<span className='text-slate-600 font-semibold'> &#125;</span>
 						</div>
 					</Fragment>
 				)}

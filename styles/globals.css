@@ -17,21 +17,3 @@ a {
 * {
 	box-sizing: border-box;
 }
-
-.language-json {
-	word-break: break-all !important;
-	white-space: break-spaces !important;
-}
-
-.language-json span:nth-child(4n + 5) {
-	display: block;
-	visibility: hidden;
-}
-
-.language-json span:nth-child(1) {
-	display: none;
-}
-
-.language-json span:nth-child(1n + 1) {
-	padding-right: 10px;
-}
