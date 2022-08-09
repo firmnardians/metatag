@@ -71,7 +71,7 @@ const Home: NextPage = () => {
 						</div>
 						<small className='italic'>
 							Open Source:
-							<a className='text-blue-700' href=''>
+							<a className='text-blue-700' href='https://github.com/firmnardians/metatag'>
 								{' '}
 								Github
 							</a>
